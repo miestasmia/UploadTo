@@ -22,11 +22,21 @@ import gtk.gdk
 from PyQt4.QtCore import QRect
 from PyQt4.QtGui import QPixmap, QApplication
 
-import winsound           # Windows only, used for notif_sound() only
-from PIL import ImageGrab # Windows only, used for "--from clipboard" only
+import wx
+
+app_wx = wx.App(False)
+app_pyqt = QApplication(sys.argv)
+
+# Get and check OS specific dependencies
+if os.name == 'nt': # Windows
+    from PIL import ImageGrab
+elif os.name == 'posix':
+    pass # TODO: Check if xclip is installed
+
 
 def notif_sound():
-    winsound.PlaySound('uploaded.wav', winsound.SND_FILENAME)
+    global app_wx
+    wx.Sound('uploaded.wav').Play(wx.SOUND_SYNC)
 
 
 # Read system args
@@ -111,14 +121,18 @@ if arg_from == "file":
     else:
         cancelled = True
 elif arg_from == "clipboard":
-    image = ImageGrab.grabclipboard()
-    
-    if not image == None:
-        image.save('temp.png','PNG')
+    if os.name == 'nt': # Windows
+        image = ImageGrab.grabclipboard()
+        if not image == None:
+            image.save('temp.png','PNG')
+            url = doFile('temp.png')
+            os.remove('temp.png')
+        else:
+            sys.exit("Your clipboard does not contain an image")
+    elif os.name == 'posix': # Unix
+        os.system("xclip -selection clipboard -t image/png -o > temp.png") # TODO: Error handling
         url = doFile('temp.png')
         os.remove('temp.png')
-    else:
-        sys.exit("Your clipboard does not contain an image")
 elif arg_from == "screen":
     # Get the default screen, containing all monitors
     screen = gtk.gdk.screen_get_default()
@@ -130,7 +144,6 @@ elif arg_from == "screen":
     for m in range(screen.get_n_monitors()):
         monitors.append(screen.get_monitor_geometry(m))
 
-    app = QApplication(sys.argv)
     image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)    
     
     if(image != None):
@@ -161,7 +174,6 @@ elif arg_from == "monitor":
             break
   
     
-    app = QApplication(sys.argv)
     image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)
     
     if(image != None):
