@@ -1,7 +1,7 @@
 ####    SETTINGS    ####
 
-IMGUR_CLIENT_ID     = '5b00baee6b6ee29'
-IMGUR_CLIENT_SECRET = 'f869a23d0aeb70a16690b2251caed850b88330cf'
+IMGUR_CLIENT_ID     = ''
+IMGUR_CLIENT_SECRET = ''
 
 ####      CODE      ####
 
