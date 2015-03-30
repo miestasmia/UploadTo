@@ -1,7 +1,7 @@
 ####    SETTINGS    ####
 
-IMGUR_CLIENT_ID     = ''
-IMGUR_CLIENT_SECRET = ''
+IMGUR_CLIENT_ID     = '5b00baee6b6ee29'
+IMGUR_CLIENT_SECRET = 'f869a23d0aeb70a16690b2251caed850b88330cf'
 
 ####      CODE      ####
 
@@ -30,8 +30,9 @@ app_pyqt = QApplication(sys.argv)
 # Get and check OS specific dependencies
 if os.name == 'nt': # Windows
     from PIL import ImageGrab
-elif os.name == 'posix':
-    pass # TODO: Check if xclip is installed
+elif os.name == 'posix': # Linux
+    if os.system("which xclip") == 1:
+        sys.exit("You don't have xclip installed")
 
 
 def notif_sound():
