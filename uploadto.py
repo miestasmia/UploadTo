@@ -8,11 +8,22 @@ IMGUR_CLIENT_SECRET = ''
 
 import os
 import sys
+
+              # Windows                 Linux
+if not (os.name == 'nt' or os.name == 'posix'):
+    sys.exit("You're not on a supported OS")
+
+
 import Tkinter, tkFileDialog
 from imgurpython import ImgurClient
 import pyperclip
-import winsound
-from PIL import ImageGrab
+
+import gtk.gdk
+from PyQt4.QtCore import QRect
+from PyQt4.QtGui import QPixmap, QApplication
+
+import winsound           # Windows only, used for notif_sound() only
+from PIL import ImageGrab # Windows only, used for "--from clipboard" only
 
 def notif_sound():
     winsound.PlaySound('uploaded.wav', winsound.SND_FILENAME)
@@ -34,6 +45,7 @@ valid_settings = {
         "region",
         "window",
         "screen",
+        "monitor",
         "clipboard",
         "file"
     ],
@@ -77,6 +89,7 @@ cancelled = False
 
 # Method for doing something with a file:
 def doFile(path):
+    global arg_to
     if arg_to == "imgur":
         global client
         url = client.upload_from_path(path, config = None, anon = True)['link']
@@ -84,8 +97,7 @@ def doFile(path):
     return url
 
         
-# Obtain file and call the doFile method
-
+# Obtain file from --from and call the doFile method, which satisfies --to
 if arg_from == "file":
     root = Tkinter.Tk()
     root.withdraw()
@@ -107,6 +119,60 @@ elif arg_from == "clipboard":
         os.remove('temp.png')
     else:
         sys.exit("Your clipboard does not contain an image")
+elif arg_from == "screen":
+    # Get the default screen, containing all monitors
+    screen = gtk.gdk.screen_get_default()
+    screen_width  = screen.get_width()
+    screen_height = screen.get_height()
+    
+    # Get all monitors on the screen
+    monitors = []
+    for m in range(screen.get_n_monitors()):
+        monitors.append(screen.get_monitor_geometry(m))
+
+    app = QApplication(sys.argv)
+    image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)    
+    
+    if(image != None):
+        image.save('temp.png', 'png')
+        url = doFile('temp.png')
+        os.remove('temp.png')
+    else:
+        sys.exit("Unable to capture screen")
+elif arg_from == "monitor":
+    # Get the default screen, containing all monitors
+    screen = gtk.gdk.screen_get_default()
+    screen_width  = screen.get_width()
+    screen_height = screen.get_height()
+    
+    # Get all monitors on the screen
+    monitors = []
+    for m in range(screen.get_n_monitors()):
+        monitors.append(screen.get_monitor_geometry(m))
+    
+    # Pick the active monitor based on the cursor position (only cross-platform solution)
+    rootwin = screen.get_root_window()
+    cursor_x, cursor_y, cursor_mods =  rootwin.get_pointer()
+    
+    activeMonitor = None
+    for m in monitors:
+        if cursor_x in range(m.x, m.x + m.width):
+            activeMonitor = m
+            break
+  
+    
+    app = QApplication(sys.argv)
+    image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)
+    
+    if(image != None):
+        rect = QRect(activeMonitor.x, activeMonitor.y, activeMonitor.width, activeMonitor.height)
+        image = image.copy(rect)
+        
+        image.save('temp.png', 'png')
+        url = doFile('temp.png')
+        os.remove('temp.png')
+    else:
+        sys.exit("Unable to capture screen")
 else:
     print arg_from + " is not implemented yet."
 
