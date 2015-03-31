@@ -15,8 +15,11 @@ if not (os.name == 'nt' or os.name == 'posix'):
 
 
 import Tkinter, tkFileDialog
+from Tkinter import *
 from imgurpython import ImgurClient
 import pyperclip
+
+from PIL import Image, ImageTk
 
 import gtk.gdk
 from PyQt4.QtCore import QRect
@@ -145,7 +148,7 @@ elif arg_from == "screen":
     for m in range(screen.get_n_monitors()):
         monitors.append(screen.get_monitor_geometry(m))
 
-    image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)    
+    image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)
     
     if(image != None):
         image.save('temp.png', 'png')
@@ -186,8 +189,108 @@ elif arg_from == "monitor":
         os.remove('temp.png')
     else:
         sys.exit("Unable to capture screen")
-else:
-    print arg_from + " is not implemented yet."
+elif arg_from == 'region':
+    # Get the default screen, containing all monitors and its width
+    screen = gtk.gdk.screen_get_default()
+    screen_width = screen.get_width()
+    screen_height = screen.get_height()
+    
+    # Get all monitors on the screen
+    monitors = []
+    for m in range(screen.get_n_monitors()):
+        monitors.append(screen.get_monitor_geometry(m))
+    
+    # Take a fullscreen screenshot and save it to temp.png
+    image = QPixmap.grabWindow(QApplication.desktop().winId(), -monitors[0].x, 0, screen_width, screen_height)
+    image.save('temp.png', 'png')
+    
+    # Create a region overlay window using Tkinter
+    region = Tk()
+    region.resizable(width = False, height = False)
+    
+    geometry = '%dx%d+%d+%d' % (screen_width, screen_height, -monitors[0].x, -monitors[0].y)
+    region.geometry(geometry)
+    
+    region.overrideredirect(1) # Borderless
+    
+    region.config(cursor = "crosshair")
+    
+    # Create the canvas to draw on
+    canvas = Canvas(region, width = screen_width, height = screen_height)
+    canvas.pack()
+    
+    # Put the screenshot as the background
+    im = Image.open('temp.png')
+    tkimage = ImageTk.PhotoImage(im)
+    canvas.create_image(0, 0, image = tkimage, anchor = NW)
+    
+    # Create the rectangle that'll later be moved
+    rectangle = canvas.create_rectangle(0, 0, 0, 0, dash = (3, 5))
+    
+    # Save the drag and drop coords
+    start_x = None
+    start_y = None
+    mouse_x = 0
+    mouse_y = 0
+    
+    def region_button1_down(event):
+        global start_x
+        global start_y
+        start_x = event.x
+        start_y = event.y
+        
+    def region_button1_up(event):
+        global image, url
+        region.destroy()
+        
+        # Crop the image to fit the rectangle
+        
+        x1 = start_x
+        y1 = start_y
+        x2 = event.x
+        y2 = event.y
+        
+        # Swap x and y if x2, y2 are smaller than y1, y1
+        if x2 < x1:
+            x1, x2 = x2, x1
+        if y2 < y1:
+            y1, y2 = y2, y1
+        
+        width = x2 - x1
+        height = y2 - y1
+        
+        print "(%d; %d) + (%d; %d)" % (x1, y1, width, height)
+        
+        rect = QRect(
+            x1,
+            y1,
+            width,
+            height
+        )
+        image = image.copy(rect)
+        image.save('temp.png', 'png')
+        url = doFile('temp.png')
+        os.remove('temp.png')
+        
+    def region_motion(event):
+        global mouse_x
+        global mouse_y
+        mouse_x = event.x
+        mouse_y = event.y
+    
+    def region_draw():
+        if not start_x == None:
+            canvas.coords(rectangle, start_x, start_y, mouse_x, mouse_y)
+        
+        region.after(15, region_draw)
+    
+    region.bind("<Button-1>", region_button1_down)
+    region.bind("<ButtonRelease-1>", region_button1_up)
+    region.bind("<Motion>", region_motion)
+    region.after(15, region_draw)
+    
+    region.mainloop()
+    
 
 if not cancelled:
     if arg_to == "imgur":
