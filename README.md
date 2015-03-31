@@ -31,6 +31,8 @@ UploadTo was developed on a Windows computer with cross-platform compatibility i
 	* ```pip install pyperclip```
 	* ```pip install PIL```
 	* ```pip install pygtk```
+6. [Register for the imgur API](https://api.imgur.com/oauth2/addclient)
+7. Update ```uploadto.py``` with your API credentials.
 
 ### Linux
 1. Make sure you have pip installed. Open a shell window (usually <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>) and run ```which pip```. If the result isn't a path, you don't have it installed. To install it, install ```python-pip``` with your favorite package manager:
@@ -54,6 +56,8 @@ UploadTo was developed on a Windows computer with cross-platform compatibility i
 	* ```pip install pyperclip```
 	* ```pip install PIL```
 	* ```pip install pygtk```
+6. [Register for the imgur API](https://api.imgur.com/oauth2/addclient)
+7. Update ```uploadto.py``` with your API credentials.
 	
 
 ## Hotkeys
