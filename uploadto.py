@@ -233,6 +233,9 @@ elif arg_from == 'region':
     mouse_x = 0
     mouse_y = 0
     
+    # Define url
+    url = ""
+    
     def region_button1_down(event):
         global start_x
         global start_y
@@ -258,8 +261,6 @@ elif arg_from == 'region':
         
         width = x2 - x1
         height = y2 - y1
-        
-        print "(%d; %d) + (%d; %d)" % (x1, y1, width, height)
         
         rect = QRect(
             x1,
