@@ -57,7 +57,6 @@ settings = {}
 valid_settings = {
     "--from": [
         "region",
-        "window",
         "screen",
         "monitor",
         "clipboard",
