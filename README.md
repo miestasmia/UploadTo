@@ -1,6 +1,8 @@
 # UploadTo
 A simplistic screenshot tool focused on easy modability.
 
+**Please note:** This project has officially been abandoned. Refer to [Perdyshot](https://github.com/Miestasmia/Perdyshot) for the maintained successor.
+
 # Usage
 Navigate to the directory UploadTo is in, and run ```python uploadto.py``` with any arguments you may want.
 
